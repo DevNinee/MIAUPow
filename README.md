@@ -45,3 +45,15 @@ Instale o Pygame com:
 
 ```bash
 pip install pygame
+
+jokepo_felino/
+├── jokepo.py
+├── README.md
+└── images/
+    ├── pedra.png
+    ├── pedracinza.png
+    ├── papel.png
+    ├── papelcinza.png
+    ├── tesoura.png
+    └── tesouracinza.png
+
