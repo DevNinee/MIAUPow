@@ -1,0 +1,366 @@
+import random
+import pygame
+import os
+
+# Inicialização do Pygame
+pygame.init()
+
+# Tamanho da janela
+LARGURA, ALTURA = 800, 600
+TELA = pygame.display.set_mode((LARGURA, ALTURA))
+pygame.display.set_caption("Jokepo Felino")
+
+# Caminho base da pasta onde está o script
+base_path = os.path.dirname(os.path.abspath(__file__))
+
+# Pasta das imagens
+images_path = os.path.join(base_path, "images")
+
+# Dicionário com nomes dos arquivos de imagem
+arquivos_imagens = {
+    "pedra_branco": "pedra.png",
+    "pedra_cinza": "pedracinza.png",
+    "papel_branco": "papel.png",
+    "papel_cinza": "papelcinza.png",
+    "tesoura_branco": "tesoura.png",
+    "tesoura_cinza": "tesouracinza.png"
+}
+
+# Carregamento seguro das imagens
+try:
+    IMAGENS = {}
+    for chave, nome_arquivo in arquivos_imagens.items():
+        caminho_imagem = os.path.join(images_path, nome_arquivo)
+        if not os.path.exists(caminho_imagem):
+            raise FileNotFoundError(f"Arquivo de imagem não encontrado: {caminho_imagem}")
+        IMAGENS[chave] = pygame.image.load(caminho_imagem)
+
+except FileNotFoundError as e:
+    print(f"Erro: {e}")
+    pygame.quit()
+    exit()
+except pygame.error as e:
+    print(f"Erro ao carregar imagens: {e}")
+    pygame.quit()
+    exit()
+
+# --- resto do seu código permanece igual ---
+# aqui você pode continuar com a definição de teclas, variáveis, funções etc.
+
+
+# Configurações do jogo
+opcoes = ["pedra", "papel", "tesoura"]
+
+teclas_jogador1 = {
+    pygame.K_a: "pedra",
+    pygame.K_s: "papel",
+    pygame.K_d: "tesoura"
+}
+
+teclas_jogador2 = {
+    pygame.K_LEFT: "pedra",
+    pygame.K_UP: "papel",
+    pygame.K_RIGHT: "tesoura"
+}
+
+# Cartas especiais
+efeitos_ativos = {"jogador1": {}, "jogador2": {}}
+cartas_disponiveis = ["jogada_hacker", "oitadico", "garra_feroz"]
+cartas_jogador1 = []
+cartas_jogador2 = []
+
+# Fonte
+fonte = pygame.font.SysFont(None, 36)
+fonte_pequena = pygame.font.SysFont(None, 24)
+
+def sortear_carta():
+    return random.choice(cartas_disponiveis)
+
+# Estado do jogo
+vidas = {"jogador1": 7, "jogador2": 7}
+rodada = 1
+MAX_PARTIDAS = 13
+
+# Modos de jogo
+modo = None  # 'local' ou 'cpu'
+
+# Jogadas dos jogadores
+jogada_jogador1 = None
+jogada_jogador2 = None
+
+# Controle do fluxo para mostrar jogadas
+mostrar_jogadas_tempo = 0
+mostrar_jogadas = False
+
+# Mensagem geral
+mensagem = "Escolha o modo: 1 - Jogar contra CPU | 2 - Jogar Local"
+
+# Função para desenhar tela inicial do menu
+def desenhar_menu():
+    TELA.fill((255, 255, 255))
+    titulo = fonte.render("Jokepo Felino", True, (0, 0, 0))
+    instrucao = fonte_pequena.render(mensagem, True, (0, 0, 0))
+    TELA.blit(titulo, (LARGURA // 2 - titulo.get_width() // 2, ALTURA // 3))
+    TELA.blit(instrucao, (LARGURA // 2 - instrucao.get_width() // 2, ALTURA // 3 + 50))
+    pygame.display.update()
+
+# Função para desenhar jogadas e HUD
+def desenhar_jogadas(j1, j2, vidas, rodada, cartas1, cartas2):
+    TELA.fill((255, 255, 255))
+
+    if j1:
+        chave_imagem = j1 + "_branco"
+        if chave_imagem in IMAGENS:
+            img = IMAGENS[chave_imagem]
+            TELA.blit(img, (150, 200))
+
+    if j2:
+        chave_imagem = j2 + "_cinza"
+        if chave_imagem in IMAGENS:
+            img = IMAGENS[chave_imagem]
+            TELA.blit(img, (550, 200))
+
+    texto_rodada = fonte.render(f"Rodada: {rodada}/{MAX_PARTIDAS}", True, (0, 0, 0))
+    texto_vidas = fonte.render(f"Vidas P1: {vidas['jogador1']} | Vidas P2: {vidas['jogador2']}", True, (0, 0, 0))
+    TELA.blit(texto_rodada, (LARGURA // 2 - 100, 20))
+    TELA.blit(texto_vidas, (LARGURA // 2 - 150, 60))
+
+    # Mostrar nomes amigáveis das cartas
+    def nome_carta_amigavel(c):
+        mapeamento = {
+            "jogada_hacker": "Jogada Hacker",
+            "oitadico": "A Oitava Vida",
+            "garra_feroz": "Garra Feroz"
+        }
+        return mapeamento.get(c, c)
+
+    texto_cartas1 = fonte_pequena.render("Cartas P1: " + ", ".join([nome_carta_amigavel(c) for c in cartas1]), True, (0, 0, 0))
+    texto_cartas2 = fonte_pequena.render("Cartas P2: " + ", ".join([nome_carta_amigavel(c) for c in cartas2]), True, (0, 0, 0))
+    TELA.blit(texto_cartas1, (20, 520))
+    TELA.blit(texto_cartas2, (20, 550))
+
+    pygame.display.update()
+
+def aplicar_cartas():
+    global jogada_jogador1, jogada_jogador2
+    for jogador in ["jogador1", "jogador2"]:
+        efeito = efeitos_ativos[jogador]
+        if "oitadico" in efeito:
+            bloqueio = efeito["oitadico"]
+            if jogador == "jogador1" and jogada_jogador1 == bloqueio:
+                jogada_jogador1 = None
+            elif jogador == "jogador2" and jogada_jogador2 == bloqueio:
+                jogada_jogador2 = None
+
+def calcular_resultado():
+    global jogada_jogador1, jogada_jogador2, vidas, efeitos_ativos
+
+    if not jogada_jogador1 or not jogada_jogador2:
+        return None
+
+    if jogada_jogador1 == jogada_jogador2:
+        return None
+
+    vencedor = None
+    if (jogada_jogador1 == "pedra" and jogada_jogador2 == "tesoura") or \
+       (jogada_jogador1 == "papel" and jogada_jogador2 == "pedra") or \
+       (jogada_jogador1 == "tesoura" and jogada_jogador2 == "papel"):
+        vencedor = "jogador1"
+    else:
+        vencedor = "jogador2"
+
+    vidas_perdidas = 1
+    if "garra_feroz" in efeitos_ativos[vencedor]:
+        vidas_perdidas = 2
+
+    perdedor = "jogador1" if vencedor == "jogador2" else "jogador2"
+    vidas[perdedor] -= vidas_perdidas
+
+    return vencedor
+
+def exibir_vencedor(vencedor):
+    TELA.fill((255, 255, 255))
+    texto = fonte.render(f"{vencedor.upper()} VENCEU!", True, (0, 0, 0))
+    instrucao = fonte_pequena.render("Pressione R para reiniciar ou ESC para sair.", True, (0, 0, 0))
+    TELA.blit(texto, (LARGURA // 2 - texto.get_width() // 2, ALTURA // 2 - 50))
+    TELA.blit(instrucao, (LARGURA // 2 - instrucao.get_width() // 2, ALTURA // 2 + 10))
+    pygame.display.update()
+
+def resetar_jogo():
+    global vidas, rodada, cartas_jogador1, cartas_jogador2, efeitos_ativos
+    global jogada_jogador1, jogada_jogador2, mostrar_jogadas, mostrar_jogadas_tempo, modo, mensagem
+
+    vidas = {"jogador1": 7, "jogador2": 7}
+    rodada = 1
+    cartas_jogador1 = []
+    cartas_jogador2 = []
+    efeitos_ativos = {"jogador1": {}, "jogador2": {}}
+    jogada_jogador1 = None
+    jogada_jogador2 = None
+    mostrar_jogadas = False
+    mostrar_jogadas_tempo = 0
+    modo = None
+    mensagem = "Escolha o modo: 1 - Jogar contra CPU | 2 - Jogar Local"
+
+rodando = True
+clock = pygame.time.Clock()
+vencedor_final = None
+
+while rodando:
+    clock.tick(60)
+
+    if modo is None:
+        # Tela de menu inicial
+        desenhar_menu()
+
+    else:
+        if mostrar_jogadas:
+            # Exibe as patas dos dois jogadores simultaneamente por 3 segundos
+            desenhar_jogadas(jogada_jogador1, jogada_jogador2, vidas, rodada, cartas_jogador1, cartas_jogador2)
+            if pygame.time.get_ticks() - mostrar_jogadas_tempo >= 3000:
+                mostrar_jogadas = False
+
+                # Calcula resultado e atualiza vidas
+                aplicar_cartas()
+                vencedor_rodada = calcular_resultado()
+
+                # Remove efeitos expirados
+                for efeitos in efeitos_ativos.values():
+                    chaves_remover = []
+                    for k, v in efeitos.items():
+                        if isinstance(v, int):
+                            efeitos[k] -= 1
+                            if efeitos[k] <= 0:
+                                chaves_remover.append(k)
+                    for k in chaves_remover:
+                        del efeitos[k]
+
+                # Incrementa rodada
+                rodada += 1
+                # Sorteia cartas nas rodadas 1, 5 e 9
+                if rodada in [1, 5, 9]:
+                    cartas_jogador1.append(sortear_carta())
+                    cartas_jogador2.append(sortear_carta())
+
+                # Zera jogadas para próxima rodada
+                jogada_jogador1 = None
+                jogada_jogador2 = None
+
+                # Verifica se alguém zerou a vida (perdeu)
+                if vidas["jogador1"] <= 0:
+                    vencedor_final = "Jogador 2"
+                    modo = "fim"
+                elif vidas["jogador2"] <= 0:
+                    vencedor_final = "Jogador 1"
+                    modo = "fim"
+
+        else:
+            # Jogo ativo: captura eventos e atualiza jogadas
+            TELA.fill((255, 255, 255))
+
+            texto_rodada = fonte.render(f"Rodada: {rodada}/{MAX_PARTIDAS}", True, (0, 0, 0))
+            texto_vidas = fonte.render(f"Vidas P1: {vidas['jogador1']} | Vidas P2: {vidas['jogador2']}", True, (0, 0, 0))
+            instrucao_cartas = fonte_pequena.render("Jogador 1: A, S, D | Jogador 2: ←, ↑, →", True, (0, 0, 0))
+            instrucao_cartas2 = fonte_pequena.render("Usar cartas: Jogador 1 - Q | Jogador 2 - M", True, (0, 0, 0))
+
+            TELA.blit(texto_rodada, (LARGURA // 2 - 100, 20))
+            TELA.blit(texto_vidas, (LARGURA // 2 - 150, 60))
+            TELA.blit(instrucao_cartas, (20, 500))
+            TELA.blit(instrucao_cartas2, (20, 530))
+
+            # Mostra cartas disponíveis
+            def nome_carta_amigavel(c):
+                mapeamento = {
+                    "jogada_hacker": "Jogada Hacker",
+                    "oitadico": "A Oitava Vida",
+                    "garra_feroz": "Garra Feroz"
+                }
+                return mapeamento.get(c, c)
+
+            texto_cartas1 = fonte_pequena.render("Cartas P1: " + ", ".join([nome_carta_amigavel(c) for c in cartas_jogador1]), True, (0, 0, 0))
+            texto_cartas2 = fonte_pequena.render("Cartas P2: " + ", ".join([nome_carta_amigavel(c) for c in cartas_jogador2]), True, (0, 0, 0))
+            TELA.blit(texto_cartas1, (20, 560))
+            TELA.blit(texto_cartas2, (20, 590))
+
+            # Exibe as mãos escolhidas, se houver
+            if jogada_jogador1:
+                chave_imagem = jogada_jogador1 + "_branco"
+                if chave_imagem in IMAGENS:
+                    img = IMAGENS[chave_imagem]
+                    TELA.blit(img, (150, 200))
+
+            if jogada_jogador2:
+                chave_imagem = jogada_jogador2 + "_cinza"
+                if chave_imagem in IMAGENS:
+                    img = IMAGENS[chave_imagem]
+                    TELA.blit(img, (550, 200))
+
+            pygame.display.update()
+
+    for evento in pygame.event.get():
+        if evento.type == pygame.QUIT:
+            rodando = False
+        elif evento.type == pygame.KEYDOWN:
+            if modo is None:
+                # Menu de escolha de modo
+                if evento.key == pygame.K_1:
+                    modo = "cpu"
+                    mensagem = "Modo CPU selecionado! Use AS D para jogar."
+                elif evento.key == pygame.K_2:
+                    modo = "local"
+                    mensagem = "Modo Local selecionado! Jogador 1: AS D, Jogador 2: ← ↑ →"
+            elif modo in ["local", "cpu"]:
+                if not mostrar_jogadas:
+                    # Captura jogadas dos jogadores
+                    if evento.key in teclas_jogador1:
+                        if "jogada_hacker" in efeitos_ativos["jogador2"]:
+                            pass  # Bloqueado pelo efeito
+                        else:
+                            jogada_jogador1 = teclas_jogador1[evento.key]
+
+                    if modo == "local":
+                        if evento.key in teclas_jogador2:
+                            if "jogada_hacker" in efeitos_ativos["jogador1"]:
+                                pass  # Bloqueado pelo efeito
+                            else:
+                                jogada_jogador2 = teclas_jogador2[evento.key]
+                    else:
+                        # CPU escolhe aleatoriamente após jogador 1 jogar
+                        if jogada_jogador1 and not jogada_jogador2:
+                            jogada_jogador2 = random.choice(opcoes)
+
+                    # Usar cartas
+                    if evento.key == pygame.K_q and cartas_jogador1:
+                        carta = cartas_jogador1.pop()
+                        if carta == "jogada_hacker":
+                            efeitos_ativos["jogador2"][carta] = 1
+                        elif carta == "oitadico":
+                            bloqueio = random.choice(opcoes)
+                            efeitos_ativos["jogador2"]["oitadico"] = bloqueio
+                        elif carta == "garra_feroz":
+                            efeitos_ativos["jogador1"][carta] = 1
+
+                    if evento.key == pygame.K_m and cartas_jogador2:
+                        carta = cartas_jogador2.pop()
+                        if carta == "jogada_hacker":
+                            efeitos_ativos["jogador1"][carta] = 1
+                        elif carta == "oitadico":
+                            bloqueio = random.choice(opcoes)
+                            efeitos_ativos["jogador1"]["oitadico"] = bloqueio
+                        elif carta == "garra_feroz":
+                            efeitos_ativos["jogador2"][carta] = 1
+
+                    if jogada_jogador1 and jogada_jogador2:
+                        mostrar_jogadas = True
+                        mostrar_jogadas_tempo = pygame.time.get_ticks()
+
+            elif modo == "fim":
+                if evento.key == pygame.K_r:
+                    resetar_jogo()
+                elif evento.key == pygame.K_ESCAPE:
+                    rodando = False
+
+    if modo == "fim":
+        exibir_vencedor(vencedor_final)
+
+pygame.quit()
