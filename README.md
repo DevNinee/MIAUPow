@@ -56,4 +56,24 @@ jokepo_felino/
     ├── papelcinza.png
     ├── tesoura.png
     └── tesouracinza.png
+▶️ Como executar
+Execute o jogo com o comando:
+
+bash
+Copy
+Edit
+python jokepo.py
+📦 Funcionalidades futuras (ideias):
+
+
+ Animações nas jogadas
+
+ Modo torneio
+
+ Som de miados e efeitos sonoros
+
+ cartas especiais
+
+🧑‍💻 Autor
+Feito com garras afiadas por Erick Ferreira
 
