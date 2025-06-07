@@ -1,79 +1,91 @@
+# MIAUPOWWWWW - Jogo de Pedra, Papel e Tesoura com Cartas Especiais
+## todas as imagens do jogo  está em :
+![Logo do Jogo](images/logo.png)
 
-# 🐾 MIAUPÔ
+MIAUPOWWWWW é um jogo de Pedra, Papel e Tesoura com elementos estratégicos adicionais, onde os jogadores podem usar cartas especiais para obter vantagens durante as partidas.
 
-Um jogo de **pedra, papel e tesoura com cartas especiais**, onde dois jogadores (ou você contra o computador) se enfrentam para zerar a vida do adversário. Totalmente felinizado, divertido e com efeitos únicos para cada carta!
+##  Como Jogar
 
-## 🎮 Como jogar
-
-### Modo de jogo
-- **1** — Jogar contra CPU
-- **2** — Jogar local com outro jogador
+### Modos de Jogo
+- **Jogador vs CPU**: Enfrente a inteligência artificial do jogo
+- **Jogador vs Jogador**: Batalhe contra um amigo no mesmo teclado
 
 ### Controles
-#### Jogador 1:
-- **A** — Pedra
-- **S** — Papel
-- **D** — Tesoura
-- **Q** — Usar carta especial
+#### Jogador 1 (Branco):
+- **A**: Tesoura
+- **S**: Pedra
+- **D**: Papel
+- **Q**: Jogada do Hacker (carta especial)
+- **W**: A Oitava Vida (carta especial)
+- **E**: Miaudição (carta especial)
 
-#### Jogador 2 (somente no modo local):
-- **←** — Pedra
-- **↑** — Papel
-- **→** — Tesoura
-- **M** — Usar carta especial
+#### Jogador 2 (Cinza):
+- **J**: Tesoura
+- **K**: Pedra
+- **L**: Papel
+- **U**: Garra Feroz (carta especial)
+- **I**: Roubo Felino (carta especial)
+- **O**: Arranhão da Sorte (carta especial)
 
-### Cartas especiais
-- **Jogada Hacker**: força o adversário a fazer uma jogada aleatória
-- **A Oitava Vida**: bloqueia a última jogada feita pelo oponente na próxima rodada
-- **Garra Feroz**: o dano da próxima vitória será 2 vidas
+### Cartas Especiais
+- **Jogada do Hacker**: Bloqueia uma jogada específica do oponente
+- **A Oitava Vida**: Recupera 1 vida
+- **Miaudição**: Permite ouvir a jogada do oponente
+- **Garra Feroz**: Faz o oponente perder 2 vidas em vez de 1
+- **Roubo Felino**: Rouba uma carta do oponente
+- **Arranhão da Sorte**: Torna uma jogada invencível por 2 rodadas
 
-🃏 Cartas são sorteadas nas rodadas 3, 6 e 9!
+## 📦 Requisitos
+- Python 3.x
+- Pygame
 
-## 🐱 Regras
-- Cada jogador começa com 7 vidas
-- Cada rodada, os jogadores fazem uma jogada
-- O vencedor faz o oponente perder 1 vida (ou 2 se estiver com Garra Feroz)
-- Empates não causam dano
-- O jogo termina quando um jogador zera suas vidas ou ao final da 13ª rodada
+## 🛠 Instalação
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/seu-usuario/miaupowww.git
+   ```
+2. Acesse o diretório do projeto:
+   ```bash
+   cd miaupowww
+   ```
+3. Instale as dependências:
+   ```bash
+   pip install pygame
+   ```
 
-## 🖼️ Pré-requisitos
-
-- [Python 3](https://www.python.org/)
-- [Pygame](https://pypi.org/project/pygame/)
-
-Instale o Pygame com:
-
+## 🚀 Execução
+Execute o jogo com:
 ```bash
-pip install pygame
+python miaupowww.py
+```
 
-jokepo_felino/
-├── jokepo.py
-├── README.md
-└── images/
-    ├── pedra.png
-    ├── pedracinza.png
-    ├── papel.png
-    ├── papelcinza.png
-    ├── tesoura.png
-    └── tesouracinza.png
-▶️ Como executar
-Execute o jogo com o comando:
+##  Regras do Jogo
+- Cada jogador começa com 7 vidas
+- O jogo tem no máximo 13 rodadas
+- Cartas especiais são distribuídas nas rodadas 1, 5 e 9
+- O jogador que reduzir as vidas do oponente a 0 primeiro vence
 
-bash
-Copy
-Edit
-python jokepo.py
-📦 Funcionalidades futuras (ideias):
+##  Capturas de Tela
+![Tela Inicial](screenshots/tela_inicial.png)
+![Partida em Andamento](screenshots/partida.png)
+![Tela Final](screenshots/fim_de_jogo.png)
 
+##  Funcionalidades Futuras (ideias)
+- Animações nas jogadas
+- Modo torneio
+- Som de miados e efeitos sonoros
+- Mais cartas especiais
+- Sistema de progressão e desbloqueio de cartas
+- Modo história/campanha
+- Multiplayer online
 
- Animações nas jogadas
+##  Autores
+Feito com garras afiadas pelos desenvolvedores Erick Ferreira e Marcos Vinicius
+Designers Leticia Delmilio,Fabiana Souza e Mariana Cardoso
 
- Modo torneio
+##  Licença
+Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
 
- Som de miados e efeitos sonoros
+---
 
- cartas especiais
-
-🧑‍💻 Autor
-Feito com garras afiadas por Erick Ferreira
-
+Divirta-se jogando MIAUPOWWWWW! 😺🎮
