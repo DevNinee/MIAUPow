@@ -37,7 +37,7 @@ MIAUPOWWWWW é um jogo de Pedra, Papel e Tesoura com elementos estratégicos adi
 - Python 3.x
 - Pygame
 
-## 🛠 Instalação
+##  Instalação
 1. Clone o repositório:
    ```bash
    git clone https://github.com/seu-usuario/miaupowww.git
@@ -73,9 +73,9 @@ python miaupowww.py
 - Multiplayer online
 
 ##  Autores
-Feito com garras afiadas pelos
-# Desenvolvedores:Erick Ferreira e Marcos Vinicius.
-# Designers e direção criativa: Leticia Delmilio,Fabiana Souza e Mariana Cardoso.
+ Feito com garras afiadas pelos
+ - Designers e direção criativa: Leticia Delmilio,Fabiana Souza e Mariana Cardoso.
+- Desenvolvedores: Erick Ferreira e Marcos Vinicius.
 
 ##  Licença
 Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
