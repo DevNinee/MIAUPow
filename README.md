@@ -1,6 +1,4 @@
 # MIAUPOWWWWW - Jogo de Pedra, Papel e Tesoura com Cartas Especiais
-## todas as imagens do jogo  está em :
-![Logo do Jogo](images/logo.png)
 
 MIAUPOWWWWW é um jogo de Pedra, Papel e Tesoura com elementos estratégicos adicionais, onde os jogadores podem usar cartas especiais para obter vantagens durante as partidas.
 
@@ -35,7 +33,7 @@ MIAUPOWWWWW é um jogo de Pedra, Papel e Tesoura com elementos estratégicos adi
 - **Roubo Felino**: Rouba uma carta do oponente
 - **Arranhão da Sorte**: Torna uma jogada invencível por 2 rodadas
 
-## 📦 Requisitos
+##  Requisitos
 - Python 3.x
 - Pygame
 
@@ -53,7 +51,7 @@ MIAUPOWWWWW é um jogo de Pedra, Papel e Tesoura com elementos estratégicos adi
    pip install pygame
    ```
 
-## 🚀 Execução
+##  Execução
 Execute o jogo com:
 ```bash
 python miaupowww.py
@@ -65,11 +63,6 @@ python miaupowww.py
 - Cartas especiais são distribuídas nas rodadas 1, 5 e 9
 - O jogador que reduzir as vidas do oponente a 0 primeiro vence
 
-##  Capturas de Tela
-![Tela Inicial](screenshots/tela_inicial.png)
-![Partida em Andamento](screenshots/partida.png)
-![Tela Final](screenshots/fim_de_jogo.png)
-
 ##  Funcionalidades Futuras (ideias)
 - Animações nas jogadas
 - Modo torneio
@@ -80,12 +73,11 @@ python miaupowww.py
 - Multiplayer online
 
 ##  Autores
-Feito com garras afiadas pelos desenvolvedores Erick Ferreira e Marcos Vinicius
-Designers Leticia Delmilio,Fabiana Souza e Mariana Cardoso
+Feito com garras afiadas pelos
+# Desenvolvedores:Erick Ferreira e Marcos Vinicius.
+# Designers e direção criativa: Leticia Delmilio,Fabiana Souza e Mariana Cardoso.
 
 ##  Licença
 Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
 ---
-
 Divirta-se jogando MIAUPOWWWWW! 😺🎮
