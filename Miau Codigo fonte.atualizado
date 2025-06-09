@@ -11,6 +11,7 @@ escolha_jogador2_event = threading.Event()
 
 popup_carta = None  # Armazena a carta que deve exibir o pop-up
 popup_resultado = None  # Armazena o resultado do pop-up (True ou False)
+popup_carta_jogador = None
 
 # --- 1. Inicialização e Configuração Básica do Pygame ---
 pygame.init()
@@ -78,21 +79,21 @@ opcoes = ["pedra", "papel", "tesoura"]
 
 # Atualize o mapeamento de teclas para incluir as cartas
 teclas_jogador1 = {
+    pygame.K_q: 0,  # primeira carta sorteada
+    pygame.K_w: 1,  # segunda carta sorteada
+    pygame.K_e: 2,  # terceira carta sorteada
     pygame.K_s: "pedra_branco",
     pygame.K_d: "papel_branco",
-    pygame.K_a: "tesoura_branco",
-    pygame.K_q: "jogada_hacker",
-    pygame.K_w: "oitava_vida",
-    pygame.K_e: "miaudicao"
+    pygame.K_a: "tesoura_branco"
 }
 
 teclas_jogador2 = {
+    pygame.K_u: 0,
+    pygame.K_i: 1,
+    pygame.K_o: 2,
     pygame.K_k: "pedra_cinza",
     pygame.K_l: "papel_cinza",
-    pygame.K_j: "tesoura_cinza",
-    pygame.K_u: "garra_feroz",
-    pygame.K_i: "roubo_felino",
-    pygame.K_o: "arranhao_sorte"
+    pygame.K_j: "tesoura_cinza"
 }
 
 # Atualização do mapeamento de cartas amigáveis
@@ -117,6 +118,14 @@ CARTAS_PROPRIEDADES = {
 
 cartas_disponiveis_para_sorteio = list(CARTAS_PROPRIEDADES.keys())  # Lista de todas as cartas
 
+def sortear_cartas_unicas_para_jogador(cartas_possiveis, quantidade):
+    cartas = []
+    while len(cartas) < quantidade:
+        carta = random.choice(cartas_possiveis)
+        if carta not in cartas:
+            cartas.append(carta)
+    return cartas
+
 # Estado global do jogo
 estado_jogo = {
     "vidas": {"jogador1": 7, "jogador2": 7},
@@ -136,7 +145,13 @@ estado_jogo = {
     "efeitos_ativos": {"jogador1": {}, "jogador2": {}},  # {carta: {duração: X, ...}}
     "mao_invencivel_j1": None,  # Para Arranhão da Sorte
     "mao_invencivel_j2": None,  # Para Arranhão da Sorte
+    "carta_especial_usada_jogador1": False,
+    "carta_especial_usada_jogador2": False,
 }
+
+# No início do jogo
+estado_jogo["cartas_jogador1"] = sortear_cartas_unicas_para_jogador(cartas_disponiveis_para_sorteio, 3)
+estado_jogo["cartas_jogador2"] = sortear_cartas_unicas_para_jogador(cartas_disponiveis_para_sorteio, 3)
 
 # --- 4. Funções de Desenho (Renderização) ---
 
@@ -186,53 +201,186 @@ def desenhar_hud(estado):
         TELA.blit(vs_img, (vs_x, vs_y))
 
 def desenhar_jogadas_no_jogo(estado):
-    """Desenha as jogadas escolhidas pelos jogadores diretamente no lugar correto, com descrição para cartas especiais."""
+    """
+    Desenha as jogadas escolhidas pelos jogadores diretamente no lugar correto,
+    com descrição para cartas especiais. Usa tamanho fixo e suavização.
+    """
     try:
-        # Defina valores padrão para x_j1 e y_j1
-        x_j1, y_j1 = 200, ALTURA // 2 - 60  # Posição padrão para o jogador 1
+        # Tamanho das jogadas
+        largura_jogada = 300
+        altura_jogada = 200
+
+        # Posição para o jogador 1
+        x_j1 = 0
+        y_j1 = ALTURA // 2 - altura_jogada // 2
 
         # Jogada do Jogador 1
         if estado["jogada_jogador1"]:
             img_j1 = pygame.image.load(os.path.join(images_path, arquivos_imagens_cartas[estado["jogada_jogador1"]])).convert_alpha()
-            nova_largura = 120
-            nova_altura = int((nova_largura / img_j1.get_width()) * img_j1.get_height())
-            img_j1 = pygame.transform.scale(img_j1, (nova_largura, nova_altura))
+            img_j1 = pygame.transform.smoothscale(img_j1, (largura_jogada, altura_jogada))  # SUAVIZAÇÃO
             TELA.blit(img_j1, (x_j1, y_j1))
 
-        # Carta especial do Jogador 1
-        if estado["carta_ativada_jogador1"]:
-            descricao = f"{NOME_CARTAS_AMIGAVEL[estado['carta_ativada_jogador1']]}: {CARTAS_PROPRIEDADES.get(estado['carta_ativada_jogador1'], {}).get('efeito', 'Sem descrição')}"
-            fonte_descricao = pygame.font.SysFont(None, 24)
-            texto_descricao = fonte_descricao.render(descricao, True, (0, 0, 0))
-            TELA.blit(texto_descricao, (x_j1, y_j1 + nova_altura + 10))  # Exibe o texto abaixo da mão
-
-        # Defina valores padrão para x_j2 e y_j2
-        x_j2, y_j2 = LARGURA - 320, ALTURA // 2 - 60  # Posição padrão para o jogador 2
+        # Posição para o jogador 2
+        x_j2 = LARGURA - largura_jogada
+        y_j2 = ALTURA // 2 - altura_jogada // 2
 
         # Jogada do Jogador 2
         if estado["jogada_jogador2"]:
             img_j2 = pygame.image.load(os.path.join(images_path, arquivos_imagens_cartas[estado["jogada_jogador2"]])).convert_alpha()
-            nova_largura = 120
-            nova_altura = int((nova_largura / img_j2.get_width()) * img_j2.get_height())
-            img_j2 = pygame.transform.scale(img_j2, (nova_largura, nova_altura))
+            img_j2 = pygame.transform.smoothscale(img_j2, (largura_jogada, altura_jogada))  # SUAVIZAÇÃO
             TELA.blit(img_j2, (x_j2, y_j2))
-
-        # Carta especial do Jogador 2
-        if estado["carta_ativada_jogador2"]:
-            descricao = f"{NOME_CARTAS_AMIGAVEL[estado['carta_ativada_jogador2']]}: {CARTAS_PROPRIEDADES.get(estado['carta_ativada_jogador2'], {}).get('efeito', 'Sem descrição')}"
-            fonte_descricao = pygame.font.SysFont(None, 24)
-            texto_descricao = fonte_descricao.render(descricao, True, (0, 0, 0))
-            TELA.blit(texto_descricao, (x_j2, y_j2 + nova_altura + 10))  # Exibe o texto abaixo da mão
     except FileNotFoundError as e:
         print(f"Erro ao carregar imagem: {e}")
 
 def desenhar_tela_fim_jogo(estado):
-    TELA.fill((255, 255, 255))
-    texto = fonte_grande.render(f"{estado['vencedor_final'].upper()} VENCEU!", True, (0, 0, 0))
-    instrucao = fonte.render("Pressione R para reiniciar ou ESC para sair.", True, (0, 0, 0))
-    TELA.blit(texto, (LARGURA // 2 - texto.get_width() // 2, ALTURA // 2 - 50))
-    TELA.blit(instrucao, (LARGURA // 2 - instrucao.get_width() // 2, ALTURA // 2 + 10))
+    TELA.fill((160, 211, 243))
+    vencedor = estado['vencedor_final']
+    if vencedor == 'Jogador 1':
+        jogador_texto = "JOGADOR 1"
+        gato_branco_img_path = os.path.join(images_path, "feliz_branco.png")
+        gato_cinza_img_path = os.path.join(images_path, "triste_cinza.png")
+        coroa_lado = "esquerda"
+    else:
+        jogador_texto = "JOGADOR 2"
+        gato_branco_img_path = os.path.join(images_path, "tristeza_branco.png")
+        gato_cinza_img_path = os.path.join(images_path, "feliz_cinza.png")
+        coroa_lado = "direita"
+
+    def render_text_with_outline(text, font, text_color, outline_color, outline_width):
+        base = font.render(text, True, text_color)
+        size = (base.get_width() + 2*outline_width, base.get_height() + 2*outline_width)
+        img = pygame.Surface(size, pygame.SRCALPHA)
+        for dx in range(-outline_width, outline_width+1):
+            for dy in range(-outline_width, outline_width+1):
+                if dx != 0 or dy != 0:
+                    img.blit(font.render(text, True, outline_color), (dx+outline_width, dy+outline_width))
+        img.blit(base, (outline_width, outline_width))
+        return img
+
+    jogador_img = render_text_with_outline(jogador_texto, fonte_grande, (255,255,255), (0,0,0), 5)
+    TELA.blit(
+        jogador_img,
+        (LARGURA // 2 - jogador_img.get_width() // 2, ALTURA // 2 - 300)
+    )
+
+    fonte_maior = pygame.font.SysFont(None, 48)
+    jogador1_texto = "JOGADOR 1"
+    jogador1_img = render_text_with_outline(jogador1_texto, fonte_maior, (255,255,255), (0,0,0), 2)
+    jogador1_x = LARGURA // 2 - 525
+    jogador1_y = ALTURA // 2 - 150
+    TELA.blit(jogador1_img, (jogador1_x - jogador1_img.get_width() // 2, jogador1_y))
+
+    jogador2_texto = "JOGADOR 2"
+    jogador2_img = render_text_with_outline(jogador2_texto, fonte_maior, (255,255,255), (0,0,0), 2)
+    jogador2_x = LARGURA // 2 + 525
+    jogador2_y = ALTURA // 2 - 150
+    TELA.blit(jogador2_img, (jogador2_x - jogador2_img.get_width() // 2, jogador2_y))
+
+    venceu_img = fonte_grande.render("VENCEU", True, (76, 199, 70))
+    TELA.blit(
+        venceu_img,
+        (LARGURA // 2 - venceu_img.get_width() // 2, ALTURA // 2 -  230)
+    )
+
+    # Desenha o botão "Revanche"
+    try:
+        revanche_img = pygame.image.load(os.path.join(images_path, "revanche.png")).convert_alpha()
+        revanche_img = pygame.transform.smoothscale(revanche_img, (363, 118))
+        revanche_rect = revanche_img.get_rect(center=(LARGURA // 2, ALTURA // 2 + 80))
+        TELA.blit(revanche_img, revanche_rect)
+    except pygame.error:
+        revanche_rect = None
+
+    # Desenha o botão "Sair"
+    try:
+        sair_img = pygame.image.load(os.path.join(images_path, "sair_final.png")).convert_alpha()
+        sair_img = pygame.transform.smoothscale(sair_img, (363, 118))
+        sair_rect = sair_img.get_rect(center=(LARGURA // 2, ALTURA // 2 + 220))
+        TELA.blit(sair_img, sair_rect)
+    except pygame.error:
+        sair_rect = None
+
+    # --- DESENHE OS GATOS E A COROA ANTES DO LOOP DE EVENTOS ---
+    # Gato branco (esquerda)
+    gato_branco_rect = None
+    try:
+        gato_branco_img = pygame.image.load(gato_branco_img_path).convert_alpha()
+        gato_branco_img = pygame.transform.smoothscale(gato_branco_img, (350, 350))
+        revanche_x = LARGURA // 2 - 80
+        revanche_y = ALTURA // 2 + 80
+        revanche_width = 363
+        gato_branco_rect = gato_branco_img.get_rect(
+            midright=(revanche_x - revanche_width // 2 - 88, revanche_y)
+        )
+        TELA.blit(gato_branco_img, gato_branco_rect)
+    except pygame.error:
+        pass
+
+    # Gato cinza (direita)
+    gato_cinza_rect = None
+    try:
+        gato_cinza_img = pygame.image.load(gato_cinza_img_path).convert_alpha()
+        gato_cinza_img = pygame.transform.smoothscale(gato_cinza_img, (350, 350))
+        revanche_x = LARGURA // 2 + 80
+        revanche_y = ALTURA // 2 + 80
+        revanche_width = 363
+        gato_cinza_rect = gato_cinza_img.get_rect(
+            midleft=(revanche_x + revanche_width // 2 + 88, revanche_y)
+        )
+        TELA.blit(gato_cinza_img, gato_cinza_rect)
+    except pygame.error:
+        pass
+
+    # Coroa acima do vencedor
+    try:
+        coroa_img = pygame.image.load(os.path.join(images_path, "coroa.png")).convert_alpha()
+        coroa_img = pygame.transform.smoothscale(coroa_img, (257, 257))
+        if coroa_lado == "esquerda" and gato_branco_rect:
+            coroa_x = gato_branco_rect.centerx
+            coroa_y = gato_branco_rect.top - 32 - 257 // 2
+            coroa_rect = coroa_img.get_rect(center=(coroa_x, coroa_y))
+            TELA.blit(coroa_img, coroa_rect)
+        elif coroa_lado == "direita" and gato_cinza_rect:
+            coroa_x = gato_cinza_rect.centerx
+            coroa_y = gato_cinza_rect.top - 32 - 257 // 2
+            coroa_rect = coroa_img.get_rect(center=(coroa_x, coroa_y))
+            TELA.blit(coroa_img, coroa_rect)
+    except pygame.error:
+        pass
+
+    try:
+        miausky_img = pygame.image.load(os.path.join(images_path, "miausky.png")).convert_alpha()
+        miausky_img = pygame.transform.smoothscale(miausky_img, (64, 64))
+        miausky_rect = miausky_img.get_rect(
+            bottomright=(LARGURA - 0, ALTURA - 0)
+        )
+        TELA.blit(miausky_img, miausky_rect)
+    except pygame.error:
+        pass
+
+    # --- AGORA SIM, FAÇA O LOOP DE EVENTOS ---
     pygame.display.update()
+    esperando_botao = True
+    while esperando_botao:
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            elif evento.type == pygame.KEYDOWN:
+                if evento.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    exit()
+            elif evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
+                mouse_pos = pygame.mouse.get_pos()
+                if revanche_rect and revanche_rect.collidepoint(mouse_pos):
+                    resetar_jogo()  # Zera tudo
+                    estado["modo"] = None  # Volta para o menu inicial
+                    esperando_botao = False
+                    return
+                elif sair_rect and sair_rect.collidepoint(mouse_pos):
+                    pygame.quit()
+                    exit()
+        pygame.time.wait(10)
 
 def desenhar_tela_inicial():
     """Desenha a tela inicial com as imagens e botões."""
@@ -402,40 +550,35 @@ def desenhar_opcoes_jogadores():
 
 
 def desenhar_cartas_estaticas():
-    """
-    Desenha as cartas estáticas embaixo de cada tecla designada, com espaçamento de 6px entre elas.
-    """
-    margem_horizontal = 6  # Espaçamento entre as cartas
-    margem_vertical = 20  # Espaçamento entre as letras e as cartas
+    margem_horizontal = 10
+    largura_carta = 130
+    altura_carta = 180
 
-    largura_carta = 100
-    altura_carta = 150
+    # Use as cartas sorteadas
+    cartas_jogador1 = estado_jogo["cartas_jogador1"]
+    cartas_jogador2 = estado_jogo["cartas_jogador2"]
 
-    posicoes_jogador1 = {
-        "jogada_hacker": (400, ALTURA - altura_carta - 50 + margem_vertical),
-        "oitava_vida": (400 + largura_carta + margem_horizontal, ALTURA - altura_carta - 50 + margem_vertical),
-        "miaudicao": (400 + 2 * (largura_carta + margem_horizontal), ALTURA - altura_carta - 50 + margem_vertical),
-    }
+    # Posições fixas para Q, W, E (jogador 1)
+    for idx, carta in enumerate(cartas_jogador1):
+        x = 270 + idx * (largura_carta + margem_horizontal)
+        y = ALTURA - altura_carta - 10
+        if carta in arquivos_imagens_cartas:
+            img_path = os.path.join(images_path, arquivos_imagens_cartas[carta])
+            if os.path.exists(img_path):
+                img_carta = pygame.image.load(img_path).convert_alpha()
+                img_carta = pygame.transform.scale(img_carta, (largura_carta, altura_carta))
+                TELA.blit(img_carta, (x, y))
 
-    posicoes_jogador2 = {
-        "garra_feroz": (LARGURA - 700, ALTURA - altura_carta - 50 + margem_vertical),
-        "roubo_felino": (LARGURA - 700 + largura_carta + margem_horizontal, ALTURA - altura_carta - 50 + margem_vertical),
-        "arranhao_sorte": (LARGURA - 700 + 2 * (largura_carta + margem_horizontal), ALTURA - altura_carta - 50 + margem_vertical),
-    }
-
-    for carta, pos in posicoes_jogador1.items():
-        img_path = os.path.join(images_path, arquivos_imagens_cartas[carta])
-        if os.path.exists(img_path):
-            img_carta = pygame.image.load(img_path).convert_alpha()
-            img_carta = pygame.transform.scale(img_carta, (largura_carta, altura_carta))
-            TELA.blit(img_carta, pos)
-
-    for carta, pos in posicoes_jogador2.items():
-        img_path = os.path.join(images_path, arquivos_imagens_cartas[carta])
-        if os.path.exists(img_path):
-            img_carta = pygame.image.load(img_path).convert_alpha()
-            img_carta = pygame.transform.scale(img_carta, (largura_carta, altura_carta))
-            TELA.blit(img_carta, pos)
+    # Posições fixas para U, I, O (jogador 2)
+    for idx, carta in enumerate(cartas_jogador2):
+        x = LARGURA - 690 + idx * (largura_carta + margem_horizontal)
+        y = ALTURA - altura_carta - 10
+        if carta in arquivos_imagens_cartas:
+            img_path = os.path.join(images_path, arquivos_imagens_cartas[carta])
+            if os.path.exists(img_path):
+                img_carta = pygame.image.load(img_path).convert_alpha()
+                img_carta = pygame.transform.scale(img_carta, (largura_carta, altura_carta))
+                TELA.blit(img_carta, (x, y))
 
 
 # --- 5. Funções de Lógica do Jogo ---
@@ -447,61 +590,78 @@ def sortear_carta():
     return carta
 
 
-def desenhar_cartas_jogador(jogador, carta_nome=None):
-    """
-    Desenha as cartas do jogador na tela com tamanhos específicos para cada carta.
-    Player 1: cartas coladas na margem inferior, à direita do asd.png (5px de separação).
-    Player 2: cartas coladas na margem inferior, à esquerda do jks.png (5px de separação).
-    """
-    cartas = estado_jogo[f"cartas_{jogador}"][:]
-    if carta_nome is not None:
-        cartas.append(carta_nome)  # Mostra a carta sorteada temporariamente
-
-    # Tamanhos das cartas (em px) conforme ordem e especificação
-    tamanhos_cartas = [
-        (180, 192),  # 1ª carta
-        (180, 192),  # 2ª carta
-        (180, 192)   # 3ª carta
-    ]
-    margem_entre_cartas = 5
-
-    # Limita a quantidade de cartas exibidas a 3 (ajuste se quiser mais)
-    cartas = cartas[:3]
-
-    if jogador == "jogador1":
-        x_inicio = 400  # Posição inicial para o jogador 1
-        y_cartas = ALTURA - 200
-    else:
-        x_inicio = LARGURA - 700  # Posição inicial para o jogador 2
-        y_cartas = ALTURA - 200
-
-    for i, carta in enumerate(cartas):
-        nome_arquivo = arquivos_imagens_cartas[carta] if carta in arquivos_imagens_cartas else f"{carta}.png"
-        img_path = os.path.join(images_path, nome_arquivo)
-        largura_carta, altura_carta = tamanhos_cartas[i]
-        pos_x = x_inicio + i * (largura_carta + margem_entre_cartas)
-        if os.path.exists(img_path):
-            img_carta = pygame.image.load(img_path).convert_alpha()
-            img_carta = pygame.transform.scale(img_carta, (largura_carta, altura_carta))
-            TELA.blit(img_carta, (pos_x, y_cartas))
-        else:
-            pygame.draw.rect(TELA, (180, 180, 180), (pos_x, y_cartas, largura_carta, altura_carta))
-
 def aplicar_efeito_carta(jogador, carta_nome):
     """
     Aplica o efeito de uma carta específica ao jogador.
+    Gerencia a duração do efeito na `efeitos_ativos`.
     """
-    if carta_nome in CARTAS_PROPRIEDADES:
-        efeito = CARTAS_PROPRIEDADES[carta_nome].get("efeito")
-        if efeito == "recupera_vida":
-            # Recupera 1 vida, mas não ultrapassa o limite de 7 vidas
-            if estado_jogo["vidas"][jogador] < 7:
-                estado_jogo["vidas"][jogador] += 1
-                print(f"{jogador} recuperou 1 vida! Vidas atuais: {estado_jogo['vidas'][jogador]}")
+    global estado_jogo
+
+    propriedades = CARTAS_PROPRIEDADES.get(carta_nome)
+    if not propriedades:
+        print(f"Erro: Carta '{carta_nome}' não encontrada nas propriedades.")
+        return
+
+    # Efeitos de duração de turno
+    if "duração" in propriedades and isinstance(propriedades["duração"], int):
+        estado_jogo["efeitos_ativos"][jogador][carta_nome] = {"duracao_restante": propriedades["duração"]}
+        print(f"{jogador} ativou {NOME_CARTAS_AMIGAVEL[carta_nome]}! Duração: {propriedades['duração']} turnos.")
+        if carta_nome == "arranhao_sorte":
+            # Função para sortear mão invencível diferente do outro jogador
+            def sortear_mao_invencivel(jogador_atual):
+                outro_jogador = "jogador2" if jogador_atual == "jogador1" else "jogador1"
+                mao_outro = estado_jogo["mao_invencivel_j2"] if jogador_atual == "jogador1" else estado_jogo["mao_invencivel_j1"]
+                opcoes_possiveis = [op for op in opcoes if op != mao_outro]
+                if not opcoes_possiveis:
+                    opcoes_possiveis = opcoes  # fallback, mas só ocorre se todas iguais
+                return random.choice(opcoes_possiveis)
+
+            mao_invencivel = sortear_mao_invencivel(jogador)
+            if jogador == "jogador1":
+                estado_jogo["mao_invencivel_j1"] = mao_invencivel
             else:
-                print(f"{jogador} já está com o máximo de vidas (7).")
+                estado_jogo["mao_invencivel_j2"] = mao_invencivel
+            print(f"Arranhão da Sorte ativado! Mão invencível secreta: {mao_invencivel} (para debug)") # REMOVER PARA PROD
+
+    # Efeitos de uso único ou especiais
+    if carta_nome == "oitava_vida":
+        estado_jogo["vidas"][jogador] += 1  # Permite ultrapassar 7 vidas
+        print(f"{jogador} usou A Oitava Vida e recuperou uma vida!")
+    elif carta_nome == "miaudicao":
+        oponente = "jogador2" if jogador == "jogador1" else "jogador1"
+        bloqueio = random.choice(opcoes)
+        # Garante que o dicionário de efeitos do oponente existe
+        if oponente not in estado_jogo["efeitos_ativos"]:
+            estado_jogo["efeitos_ativos"][oponente] = {}
+        estado_jogo["efeitos_ativos"][oponente]["miaudicao"] = {"bloqueio": bloqueio, "duracao_restante": propriedades["duração"]}
+        print(f"{jogador} usou Miaudição! {oponente} não pode usar {bloqueio} por {propriedades['duração']} turnos.")
+        # Se o oponente já escolheu a jogada bloqueada, força uma nova jogada aleatória
+        jogada_var = "jogada_jogador1" if oponente == "jogador1" else "jogada_jogador2"
+        jogada_atual = estado_jogo[jogada_var]
+        if jogada_atual == bloqueio:
+            # Sorteia uma jogada diferente da bloqueada
+            novas_opcoes = [op for op in opcoes if op != bloqueio]
+            if novas_opcoes:
+                nova_jogada = random.choice(novas_opcoes)
+                estado_jogo[jogada_var] = nova_jogada
+                print(f"{oponente} teve a jogada bloqueada por Miaudição! Nova jogada sorteada: {nova_jogada}")
+            else:
+                estado_jogo[jogada_var] = None
+    if carta_nome == "roubo_felino":
+        # Rouba a primeira carta da mão do oponente, se houver, e adiciona à mão do jogador (sem usar)
+        oponente = "jogador2" if jogador == "jogador1" else "jogador1"
+        cartas_oponente = estado_jogo[f"cartas_{oponente}"]
+        cartas_jogador = estado_jogo[f"cartas_{jogador}"]
+        if cartas_oponente:
+            carta_roubada = cartas_oponente.pop(0)
+            # Só adiciona se o jogador não tiver 3 cartas
+            if len(cartas_jogador) < 3:
+                cartas_jogador.append(carta_roubada)
+                print(f"{jogador} usou Roubo Felino e roubou a carta '{NOME_CARTAS_AMIGAVEL.get(carta_roubada, carta_roubada)}' de {oponente}!")
+            else:
+                print(f"{jogador} tentou roubar, mas já tem 3 cartas. Carta roubada foi descartada.")
         else:
-            print(f"{jogador} ativou a carta especial: {NOME_CARTAS_AMIGAVEL[carta_nome]}")
+            print(f"{jogador} usou Roubo Felino, mas {oponente} não tinha cartas para roubar.")
 
 def remover_efeitos_expirados():
     """Remove efeitos de cartas que expiraram."""
@@ -532,24 +692,33 @@ def pode_jogar_mao(jogador, mao):
 
 def processar_jogadas_thread(jogador_num, key):
     global estado_jogo, popup_carta
-    with estado_jogo_lock:  # Adquire o lock antes de modificar o estado
-        teclas = teclas_jogador1 if jogador_num == 1 else teclas_jogador2
-        jogada_var = "jogada_jogador1" if jogador_num == 1 else "jogada_jogador2"
-        carta_ativada_var = "carta_ativada_jogador1" if jogador_num == 1 else "carta_ativada_jogador2"
+    with estado_jogo_lock:
+        if jogador_num == 1:
+            teclas = teclas_jogador1
+            cartas = estado_jogo["cartas_jogador1"]
+            carta_ativada_var = "carta_ativada_jogador1"
+            jogada_var = "jogada_jogador1"
+        else:
+            teclas = teclas_jogador2
+            cartas = estado_jogo["cartas_jogador2"]
+            carta_ativada_var = "carta_ativada_jogador2"
+            jogada_var = "jogada_jogador2"
 
         if key in teclas:
-            jogada_escolhida = teclas[key]
-
-            # Verifica se é uma carta especial
-            if jogada_escolhida in CARTAS_PROPRIEDADES:
-                estado_jogo[carta_ativada_var] = jogada_escolhida  # Ativa a carta especial
-                popup_carta = jogada_escolhida  # Sinaliza para exibir o pop-up na thread principal
+            valor = teclas[key]
+            # Se for índice (QWE/UIO), ativa a carta sorteada naquela posição
+            if isinstance(valor, int):
+                if valor < len(cartas):
+                    carta_escolhida = cartas[valor]
+                    estado_jogo[carta_ativada_var] = carta_escolhida
+                    popup_carta = carta_escolhida
+                    popup_carta_jogador = jogador_num  # 1 ou 2
             else:
-                estado_jogo[jogada_var] = jogada_escolhida  # Registra a mão jogada
+                # Jogada normal (pedra, papel, tesoura)
+                estado_jogo[jogada_var] = valor
 
-            print(f"Jogador {jogador_num} escolheu: {jogada_escolhida}")
+            print(f"Jogador {jogador_num} escolheu: {valor}")
 
-            # Sinaliza que o jogador fez sua escolha
             if jogador_num == 1:
                 escolha_jogador1_event.set()
             else:
@@ -613,16 +782,24 @@ def calcular_resultado_rodada():
 
 
 def avancar_rodada():
-    """Atualiza o estado do jogo para a próxima rodada."""
     global estado_jogo
 
-    # INCREMENTA A RODADA
     estado_jogo["rodada"] += 1
 
     # Sorteia cartas nas rodadas 1, 5 e 9 (se quiser outras rodadas, mude aqui)
     if estado_jogo["rodada"] in [1, 5, 9]:
-        estado_jogo["cartas_jogador1"].append(sortear_carta())
-        estado_jogo["cartas_jogador2"].append(sortear_carta())
+        if len([c for c in estado_jogo["cartas_jogador1"] if c]) < 3:
+            novas = [c for c in cartas_disponiveis_para_sorteio if c not in estado_jogo["cartas_jogador1"]]
+            while len([c for c in estado_jogo["cartas_jogador1"] if c]) < 3 and novas:
+                carta = random.choice(novas)
+                estado_jogo["cartas_jogador1"].append(carta)
+                novas.remove(carta)
+        if len([c for c in estado_jogo["cartas_jogador2"] if c]) < 3:
+            novas = [c for c in cartas_disponiveis_para_sorteio if c not in estado_jogo["cartas_jogador2"]]
+            while len([c for c in estado_jogo["cartas_jogador2"] if c]) < 3 and novas:
+                carta = random.choice(novas)
+                estado_jogo["cartas_jogador2"].append(carta)
+                novas.remove(carta)
 
     # Zera jogadas para próxima rodada
     estado_jogo["jogada_jogador1"] = None
@@ -658,44 +835,65 @@ def resetar_jogo():
         "efeitos_ativos": {"jogador1": {}, "jogador2": {}},
         "mao_invencivel_j1": None,
         "mao_invencivel_j2": None,
+        "carta_especial_usada_jogador1": False,
+        "carta_especial_usada_jogador2": False,
     }
-    # Sorteia as primeiras cartas ao resetar, se a rodada inicial (1) tiver sorteio
-    if 1 in [1, 5, 9]:  # Checa se a rodada 1 está na lista de sorteio
-        estado_jogo["cartas_jogador1"].append(sortear_carta())
-        estado_jogo["cartas_jogador2"].append(sortear_carta())
+    for _ in range(3):
+        if len(estado_jogo["cartas_jogador1"]) < 3:
+            nova_carta = sortear_carta()
+            while nova_carta in estado_jogo["cartas_jogador1"]:
+                nova_carta = sortear_carta()
+            estado_jogo["cartas_jogador1"].append(nova_carta)
+
+        if len(estado_jogo["cartas_jogador2"]) < 3:
+            nova_carta2 = sortear_carta()
+            while nova_carta2 in estado_jogo["cartas_jogador2"]:
+                nova_carta2 = sortear_carta()
+            estado_jogo["cartas_jogador2"].append(nova_carta2)
 
 
 def exibir_popup_carta(carta_nome):
     """
-    Exibe um pop-up no meio da tela com as opções de "Usar" ou "Não Usar" uma carta.
+    Exibe um pop-up centralizado apenas com a imagem grande da carta e dois botões laterais: "Usar" e "Não Usar".
     Retorna True se o jogador escolher "Usar" e False caso contrário.
+    O fundo é a tela do jogo, não escurecido.
     """
-    largura_popup = 500  # Aumente a largura para acomodar o texto
-    altura_popup = 400  # Aumente a altura para acomodar a imagem e os botões
-    x_popup = (LARGURA - largura_popup) // 2
-    y_popup = (ALTURA - altura_popup) // 2
-
-    # Fonte para o texto
-    fonte_popup = pygame.font.SysFont(None, 36)
+    # Tamanho da carta grande
+    largura_carta, altura_carta = 350, 500
+    x_carta = (LARGURA - largura_carta) // 2
+    y_carta = (ALTURA - altura_carta) // 2
 
     # Botões
-    largura_botao = 150
-    altura_botao = 50
-    margem_botao = 20
+    largura_botao = 160
+    altura_botao = 60
+    margem_horizontal = 40
 
-    botao_usar = pygame.Rect(x_popup + margem_botao, y_popup + altura_popup - altura_botao - margem_botao, largura_botao, altura_botao)
-    botao_nao_usar = pygame.Rect(x_popup + largura_popup - largura_botao - margem_botao, y_popup + altura_popup - altura_botao - margem_botao, largura_botao, altura_botao)
+    # Botão "Usar" à esquerda da carta
+    botao_usar = pygame.Rect(
+        x_carta - largura_botao - margem_horizontal,
+        y_carta + altura_carta // 2 - altura_botao // 2,
+        largura_botao,
+        altura_botao
+    )
+    # Botão "Não Usar" à direita da carta
+    botao_nao_usar = pygame.Rect(
+        x_carta + largura_carta + margem_horizontal,
+        y_carta + altura_carta // 2 - altura_botao // 2,
+        largura_botao,
+        altura_botao
+    )
+
+    # Fonte para os botões
+    fonte_popup = pygame.font.SysFont(None, 36)
 
     # Carregar a imagem da carta
     img_path = os.path.join(images_path, arquivos_imagens_cartas.get(carta_nome, ""))
     if os.path.exists(img_path):
         img_carta = pygame.image.load(img_path).convert_alpha()
-        largura_carta, altura_carta = 120, 180  # Aumente o tamanho da imagem da carta
         img_carta = pygame.transform.scale(img_carta, (largura_carta, altura_carta))
     else:
-        img_carta = None  # Caso a imagem não exista
+        img_carta = None
 
-    # Loop do pop-up
     rodando_popup = True
     while rodando_popup:
         for evento in pygame.event.get():
@@ -705,51 +903,56 @@ def exibir_popup_carta(carta_nome):
             elif evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
                 mouse_pos = pygame.mouse.get_pos()
                 if botao_usar.collidepoint(mouse_pos):
-                    return True  # Jogador escolheu "Usar"
+                    return True
                 elif botao_nao_usar.collidepoint(mouse_pos):
-                    return False  # Jogador escolheu "Não Usar"
+                    return False
 
-        # Desenhar o pop-up
-        pygame.draw.rect(TELA, (200, 200, 200), (x_popup, y_popup, largura_popup, altura_popup))  # Fundo do pop-up
-        pygame.draw.rect(TELA, (0, 0, 0), (x_popup, y_popup, largura_popup, altura_popup), 2)  # Borda do pop-up
+        # Redesenha a tela do jogo como fundo
+        TELA.fill((243, 240, 146))
+        desenhar_hud(estado_jogo)
+        desenhar_vidas()
+        desenhar_opcoes_jogadores()
+        desenhar_cartas_estaticas()
 
-        # Texto do pop-up
-        texto_carta = fonte_popup.render(f"Deseja usar a carta '{NOME_CARTAS_AMIGAVEL.get(carta_nome, carta_nome)}'?", True, (0, 0, 0))
-        TELA.blit(texto_carta, (x_popup + (largura_popup - texto_carta.get_width()) // 2, y_popup + 20))
-
-        # Desenhar a imagem da carta (se existir)
+        # Desenha a carta grande centralizada
         if img_carta:
-            x_carta = x_popup + (largura_popup - largura_carta) // 2
-            y_carta = y_popup + 80  # Espaço abaixo do texto
             TELA.blit(img_carta, (x_carta, y_carta))
 
-        # Botões
-        pygame.draw.rect(TELA, (0, 255, 0), botao_usar)  # Botão "Usar"
-        pygame.draw.rect(TELA, (255, 0, 0), botao_nao_usar)  # Botão "Não Usar"
-
+        # Botão "Usar"
+        pygame.draw.rect(TELA, (0, 180, 0), botao_usar, border_radius=12)
         texto_usar = fonte_popup.render("Usar", True, (255, 255, 255))
+        TELA.blit(
+            texto_usar,
+            (botao_usar.x + (largura_botao - texto_usar.get_width()) // 2,
+             botao_usar.y + (altura_botao - texto_usar.get_height()) // 2)
+        )
+
+        # Botão "Não Usar"
+        pygame.draw.rect(TELA, (180, 0, 0), botao_nao_usar, border_radius=12)
         texto_nao_usar = fonte_popup.render("Não Usar", True, (255, 255, 255))
-        TELA.blit(texto_usar, (botao_usar.x + (largura_botao - texto_usar.get_width()) // 2, botao_usar.y + (altura_botao - texto_usar.get_height()) // 2))
-        TELA.blit(texto_nao_usar, (botao_nao_usar.x + (largura_botao - texto_nao_usar.get_width()) // 2, botao_nao_usar.y + (altura_botao - texto_nao_usar.get_height()) // 2))
+        TELA.blit(
+            texto_nao_usar,
+            (botao_nao_usar.x + (largura_botao - texto_nao_usar.get_width()) // 2,
+             botao_nao_usar.y + (altura_botao - texto_nao_usar.get_height()) // 2)
+        )
 
         pygame.display.update()
 
 
 # --- 6. Loop Principal do Jogo ---
 def game_loop():
-    global estado_jogo, popup_carta  # Adicione popup_carta aqui para torná-la acessível
+    global estado_jogo, popup_carta
     rodando = True
     clock = pygame.time.Clock()
-
-    # Variável para controlar a tela inicial
     tela_inicial = True
+    bloqueado = False
 
     while rodando:
-        delta_time = clock.tick(60) / 1000.0  # Limita a 60 FPS
+        delta_time = clock.tick(60) / 1000.0
 
         # --- Gerenciamento de Eventos ---
         if tela_inicial:
-            botoes = desenhar_tela_inicial()  # Pega as posições e tamanhos dos botões
+            botoes = desenhar_tela_inicial()
 
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
@@ -758,16 +961,16 @@ def game_loop():
                 if evento.key == pygame.K_ESCAPE:
                     rodando = False
 
-                if estado_jogo["modo"] == "local":
-                    if estado_jogo["jogada_jogador1"] is None:
-                        threading.Thread(target=processar_jogadas_thread, args=(1, evento.key)).start()
-                    if estado_jogo["jogada_jogador2"] is None:
-                        threading.Thread(target=processar_jogadas_thread, args=(2, evento.key)).start()
-
-                elif estado_jogo["modo"] == "cpu":
-                    if estado_jogo["jogada_jogador1"] is None:
-                        threading.Thread(target=processar_jogadas_thread, args=(1, evento.key)).start()
-                        threading.Thread(target=processar_jogada_cpu).start()
+                if not bloqueado:
+                    if estado_jogo["modo"] == "local":
+                        if estado_jogo["jogada_jogador1"] is None:
+                            threading.Thread(target=processar_jogadas_thread, args=(1, evento.key)).start()
+                        if estado_jogo["jogada_jogador2"] is None:
+                            threading.Thread(target=processar_jogadas_thread, args=(2, evento.key)).start()
+                    elif estado_jogo["modo"] == "cpu":
+                        if estado_jogo["jogada_jogador1"] is None:
+                            threading.Thread(target=processar_jogadas_thread, args=(1, evento.key)).start()
+                            threading.Thread(target=processar_jogada_cpu).start()
 
             if tela_inicial:
                 if evento.type == pygame.KEYDOWN:
@@ -779,7 +982,6 @@ def game_loop():
                         tela_inicial = False
                 elif evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
                     mouse_pos = pygame.mouse.get_pos()
-                    # Aqui usa verificar_clique para cada botão:
                     if verificar_clique(mouse_pos, *botoes["local"]):
                         estado_jogo["modo"] = "local"
                         tela_inicial = False
@@ -792,27 +994,61 @@ def game_loop():
         # --- Renderização ---
         if tela_inicial:
             desenhar_tela_inicial()
+        elif estado_jogo["modo"] == "fim_jogo" or estado_jogo["vidas"]["jogador1"] <= 0 or estado_jogo["vidas"]["jogador2"] <= 0:
+            # Mostra a tela final se algum jogador tiver 0 vidas
+            if estado_jogo["vidas"]["jogador1"] <= 0:
+                estado_jogo["vencedor_final"] = "Jogador 2"
+            elif estado_jogo["vidas"]["jogador2"] <= 0:
+                estado_jogo["vencedor_final"] = "Jogador 1"
+            desenhar_tela_fim_jogo(estado_jogo)
+            pygame.display.update()
+            # Espera interação para sair ou reiniciar
+            for evento in pygame.event.get():
+                if evento.type == pygame.QUIT:
+                    rodando = False
+                elif evento.type == pygame.KEYDOWN:
+                    if evento.key == pygame.K_ESCAPE:
+                        rodando = False
+                elif evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
+                    mouse_pos = pygame.mouse.get_pos()
+                    # Aqui você pode adicionar lógica para botões de revanche/sair se desejar
+            continue  # Pula o resto do loop para não desenhar o jogo
+
         else:
-            TELA.fill((243, 240, 146))  # Limpa a tela antes de desenhar
+            TELA.fill((243, 240, 146))
             desenhar_hud(estado_jogo)
             desenhar_vidas()
             desenhar_opcoes_jogadores()
             desenhar_cartas_estaticas()
 
-            # Mostrar jogadas só quando ambos escolherem
             if estado_jogo["modo"] == "local" and escolha_jogador1_event.is_set() and escolha_jogador2_event.is_set():
-                tempo_exibicao = 5000  # 5 segundos
+                bloqueado = True
+                tempo_exibicao = 5000
                 tempo_inicio = pygame.time.get_ticks()
 
                 while pygame.time.get_ticks() - tempo_inicio < tempo_exibicao:
                     desenhar_jogadas_no_jogo(estado_jogo)
                     pygame.display.update()
+
+                if popup_carta:
+                    popup_resultado = exibir_popup_carta(popup_carta)
+                    if popup_resultado:
+                        aplicar_efeito_carta("jogador1" if popup_carta in estado_jogo["cartas_jogador1"] else "jogador2", popup_carta)
+                        if popup_carta in estado_jogo["cartas_jogador1"]:
+                            estado_jogo["cartas_jogador1"].remove(popup_carta)
+                        elif popup_carta in estado_jogo["cartas_jogador2"]:
+                            estado_jogo["cartas_jogador2"].remove(popup_carta)
+                    else:
+                        print(f"Jogador decidiu não usar a carta '{popup_carta}'.")
+                    popup_carta = None
+
                 vencedor = calcular_resultado_rodada()
                 avancar_rodada()
                 escolha_jogador1_event.clear()
                 escolha_jogador2_event.clear()
+                bloqueado = False
             elif estado_jogo["modo"] == "cpu" and escolha_jogador1_event.is_set() and escolha_jogador2_event.is_set():
-                tempo_exibicao = 5000  # 5 segundos
+                tempo_exibicao = 5000
                 tempo_inicio = pygame.time.get_ticks()
 
                 while pygame.time.get_ticks() - tempo_inicio < tempo_exibicao:
@@ -824,14 +1060,24 @@ def game_loop():
                 escolha_jogador2_event.clear()
 
             if popup_carta:
-                popup_resultado = exibir_popup_carta(popup_carta)  # Exibe o pop-up na thread principal
-                if popup_resultado:
-                    aplicar_efeito_carta("jogador1" if estado_jogo["jogada_jogador1"] == popup_carta else "jogador2", popup_carta)
+                if (popup_carta in estado_jogo["cartas_jogador1"] and not estado_jogo["carta_especial_usada_jogador1"]) or \
+                   (popup_carta in estado_jogo["cartas_jogador2"] and not estado_jogo["carta_especial_usada_jogador2"]):
+                    popup_resultado = exibir_popup_carta(popup_carta)
+                    if popup_resultado:
+                        if popup_carta in estado_jogo["cartas_jogador1"]:
+                            estado_jogo["cartas_jogador1"].remove(popup_carta)
+                            estado_jogo["carta_especial_usada_jogador1"] = True
+                        elif popup_carta in estado_jogo["cartas_jogador2"]:
+                            aplicar_efeito_carta("jogador2", popup_carta)
+                            estado_jogo["cartas_jogador2"].remove(popup_carta)
+                            estado_jogo["carta_especial_usada_jogador2"] = True
+                    else:
+                        print(f"Jogador decidiu não usar a carta '{popup_carta}'.")
                 else:
-                    print(f"Jogador decidiu não usar a carta '{popup_carta}'.")
-                popup_carta = None  # Reseta a sinalização
+                    print("Só é permitido usar uma carta especial por partida!")
+                popup_carta = None
 
-        pygame.display.update()  # Atualiza a tela apenas uma vez por frame
+        pygame.display.update()
 
     pygame.quit()
     exit()
@@ -839,8 +1085,25 @@ def game_loop():
 
 # --- Ponto de Entrada Principal ---
 if __name__ == "__main__":
-    # Sorteando carta para o jogador 1
-    nova_carta = sortear_carta()
-    estado_jogo["cartas_jogador1"].append(nova_carta)
+    for _ in range(3):
+        if len(estado_jogo["cartas_jogador1"]) < 3:
+            nova_carta = sortear_carta()
+            while nova_carta in estado_jogo["cartas_jogador1"]:
+                nova_carta = sortear_carta()
+            estado_jogo["cartas_jogador1"].append(nova_carta)
+
+        if len(estado_jogo["cartas_jogador2"]) < 3:
+            nova_carta2 = sortear_carta()
+            while nova_carta2 in estado_jogo["cartas_jogador2"]:
+                nova_carta2 = sortear_carta()
+            estado_jogo["cartas_jogador2"].append(nova_carta2)
 
     game_loop()
+
+def sortear_cartas_unicas_para_jogador(cartas_possiveis, quantidade):
+    cartas = []
+    while len(cartas) < quantidade:
+        carta = random.choice(cartas_possiveis)
+        if carta not in cartas:
+            cartas.append(carta)
+    return cartas
