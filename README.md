@@ -1,12 +1,25 @@
-# MIAUPOWWWWW - Jogo de Pedra, Papel e Tesoura com Cartas Especiais
 
-MIAUPOWWWWW é um jogo de Pedra, Papel e Tesoura com elementos estratégicos adicionais, onde os jogadores podem usar cartas especiais para obter vantagens durante as partidas.
+# 🐾 MIAUPOW - Jogo de Pedra, Papel e Tesoura com Cartas Especiais
+
+**MIAUPOWWWWW** é um jogo de Pedra, Papel e Tesoura com elementos estratégicos adicionais, onde os jogadores podem usar **cartas especiais** para obter vantagens durante as partidas. Uma experiência divertida, dinâmica e cheia de surpresas!
+
+---
+
+## 🚫 Direitos Autorais e Uso Indevido
+
+ **Este jogo é uma criação exclusiva da equipe de desenvolvimento composta por Leticia Delmilio, Fabiana Souza, Mariana Cardoso, Erick Ferreira e Marcos Vinicius.**
+
+ **É expressamente proibido copiar, redistribuir, comercializar ou declarar como sua qualquer parte deste jogo, seja o código, design, conceito ou nome.**
+
+ O projeto foi feito com fins educacionais e criativos, e todo uso indevido será considerado infração de direitos autorais.
+
+---
 
 ##  Como Jogar
 
 ### Modos de Jogo
-- **Jogador vs CPU**: Enfrente a inteligência artificial do jogo
-- **Jogador vs Jogador**: Batalhe contra um amigo no mesmo teclado
+- **Jogador vs CPU**: Enfrente a inteligência artificial do jogo.
+- **Jogador vs Jogador**: Batalhe contra um amigo no mesmo teclado.
 
 ### Controles
 #### Jogador 1 (Branco):
@@ -25,59 +38,79 @@ MIAUPOWWWWW é um jogo de Pedra, Papel e Tesoura com elementos estratégicos adi
 - **I**: Roubo Felino (carta especial)
 - **O**: Arranhão da Sorte (carta especial)
 
+---
+
 ### Cartas Especiais
-- **Jogada do Hacker**: Bloqueia uma jogada específica do oponente
-- **A Oitava Vida**: Recupera 1 vida
-- **Miaudição**: Permite ouvir a jogada do oponente
-- **Garra Feroz**: Faz o oponente perder 2 vidas em vez de 1
-- **Roubo Felino**: Rouba uma carta do oponente
-- **Arranhão da Sorte**: Torna uma jogada invencível por 2 rodadas
+- **Jogada do Hacker**: Bloqueia uma jogada específica do oponente.
+- **A Oitava Vida**: Recupera 1 vida.
+- **Miaudição**: Permite ouvir a jogada do oponente.
+- **Garra Feroz**: Faz o oponente perder 2 vidas em vez de 1.
+- **Roubo Felino**: Rouba uma carta do oponente.
+- **Arranhão da Sorte**: Torna uma jogada invencível por 2 rodadas.
+
+---
 
 ##  Requisitos
+
 - Python 3.x
-- Pygame
+- Biblioteca [Pygame](https://www.pygame.org/)
+
+---
 
 ##  Instalação
-1. Clone o repositório:
-   ```bash
-   git clone https://github.com/seu-usuario/miaupowww.git
-   ```
-2. Acesse o diretório do projeto:
-   ```bash
-   cd miaupowww
-   ```
-3. Instale as dependências:
-   ```bash
-   pip install pygame
-   ```
 
-##  Execução
-Execute o jogo com:
+```bash
+git clone https://github.com/seu-usuario/miaupowww.git
+cd miaupowww
+pip install pygame
+```
+
+---
+
+## ▶ Execução
+
 ```bash
 python miaupowww.py
 ```
 
+---
+
 ##  Regras do Jogo
-- Cada jogador começa com 7 vidas
-- O jogo tem no máximo 13 rodadas
-- Cartas especiais são distribuídas nas rodadas 1, 5 e 9
-- O jogador que reduzir as vidas do oponente a 0 primeiro vence
+
+- Cada jogador começa com **7 vidas**.
+- O jogo tem no máximo **13 rodadas**.
+- Cartas especiais são distribuídas nas rodadas **1, 5 e 9**.
+- O jogador que reduzir as vidas do oponente a **zero primeiro vence**.
+
+---
 
 ##  Funcionalidades Futuras (ideias)
+
 - Animações nas jogadas
 - Modo torneio
-- Som de miados e efeitos sonoros
+- Sons de miado e efeitos visuais
 - Mais cartas especiais
-- Sistema de progressão e desbloqueio de cartas
-- Modo história/campanha
+- Sistema de progressão e desbloqueios
+- Modo história / campanha
 - Multiplayer online
 
-##  Autores
- Feito com garras afiadas pelos
- - Designers e direção criativa: Leticia Delmilio,Fabiana Souza e Mariana Cardoso.
-- Desenvolvedores: Erick Ferreira e Marcos Vinicius.
+---
+
+##  Equipe Criadora
+
+Feito com garras afiadas por:
+
+- **Designers & Direção Criativa**: Leticia Delmilio, Fabiana Souza, Mariana Cardoso  
+- **Desenvolvedores**: Erick Ferreira, Marcos Vinicius
+
+---
 
 ##  Licença
-Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
+
+Este projeto está sob Licença MIT. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+> **⚠️ Atenção**: Este jogo **não pode ser utilizado comercialmente ou copiado** sem autorização expressa da equipe original. Todo uso indevido será considerado violação de propriedade intelectual.
+
 ---
-Divirta-se jogando MIAUPOWWWWW! 😺🎮
+
+ Divirta-se jogando **MIAUPOW**! 😺🎮
